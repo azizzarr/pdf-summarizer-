@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Analyzer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Include Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>PDF Analyzer Pro</h1>
+            <p>Upload your PDF file to analyze its content and get detailed insights</p>
+        </div>
+
+        <div class="upload-container">
+            <div class="upload-form" id="dropZone">
+                <div class="file-input-wrapper">
+                    <input type="file" id="pdfFile" class="file-input" accept=".pdf" required>
+                    <button class="upload-button" id="uploadButton" onclick="document.getElementById('pdfFile').click()">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        Select PDF File
+                    </button>
+                </div>
+                <p style="margin-top: 1rem; color: #6b7280;">or drag and drop your PDF file here</p>
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p class="loading-text">Analyzing PDF and generating summary...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-header">
+                <h2 class="result-title">Analysis Results</h2>
+                <div class="button-group">
+                    <button class="preview-button" id="previewButton" onclick="openPdfPreview()">
+                        <svg class="preview-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Preview PDF
+                    </button>
+                    <button class="upload-button" onclick="resetForm()">Analyze Another PDF</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="pageCount">-</div>
+                    <div class="stat-label">Total Pages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="wordCount">-</div>
+                    <div class="stat-label">Total Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="summaryLength">-</div>
+                    <div class="stat-label">Summary Length</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="compressionRatio">-</div>
+                    <div class="stat-label">Compression Ratio</div>
+                </div>
+            </div>
+            <div class="result-content">
+                <div class="summary-section">
+                    <h3>AI-Generated Summary</h3>
+                    <div class="summary-box" id="summaryContent"></div>
+                    <div class="truncation-notice" id="truncationNotice" style="display: none;">
+                        Note: The summary was generated from the first 10,000 characters of the document due to its length.
+                    </div>
+                </div>
+                <div class="content-section">
+                    <h3>Full PDF Content</h3>
+                    <div class="content-box">
+                        <pre id="pdfContent"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF Preview Modal -->
+        <div class="modal" id="pdfModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">PDF Preview</h3>
+                    <button class="modal-close" onclick="closePdfPreview()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe id="pdfPreview" class="pdf-preview"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html> 

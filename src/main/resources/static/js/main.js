@@ -28,7 +28,6 @@ const compressionRatioElement = document.getElementById('compressionRatio');
 const pdfContentElement = document.getElementById('pdfContent');
 const summaryContentElement = document.getElementById('summaryContent');
 const truncationNoticeElement = document.getElementById('truncationNotice');
-const previewButton = document.getElementById('previewButton');
 const modal = document.getElementById('pdfModal');
 const modalClose = document.getElementById('modalClose');
 
@@ -54,23 +53,23 @@ fileInput.addEventListener('change', handleFileUpload);
 uploadButton.addEventListener('click', () => fileInput.click());
 resetButton.addEventListener('click', resetForm);
 generateQuizButton.addEventListener('click', generateQuiz);
-previewButton.addEventListener('click', openPdfPreview);
-modalClose.addEventListener('click', closePdfPreview);
 quizForm.addEventListener('submit', submitQuiz);
 
-// Close modal when clicking outside
-window.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        closePdfPreview();
-    }
+// --- Animate Drop Zone Icon on Dragover ---
+dropZone.addEventListener('dragenter', () => {
+  const icon = dropZone.querySelector('.upload-icon');
+  if (icon) icon.classList.add('drag-animate');
+});
+dropZone.addEventListener('dragleave', () => {
+  const icon = dropZone.querySelector('.upload-icon');
+  if (icon) icon.classList.remove('drag-animate');
+});
+dropZone.addEventListener('drop', () => {
+  const icon = dropZone.querySelector('.upload-icon');
+  if (icon) icon.classList.remove('drag-animate');
 });
 
-// Close modal with Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.style.display === 'block') {
-        closePdfPreview();
-    }
-});
+// Remove sidebar mobile toggle logic
 
 function preventDefaults(e) {
     e.preventDefault();
@@ -174,8 +173,9 @@ function setupSummaryCopy() {
         btn.innerHTML = '<span style="color:#7c3aed;font-weight:600;">Copied!</span>';
         setTimeout(() => {
             btn.classList.remove('copied');
-            btn.innerHTML = '<svg width="22" height="22" fill="none" viewBox="0 0 22 22"><rect x="5" y="5" width="12" height="12" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/><path d="M8 3h6a2 2 0 0 1 2 2v6" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/></svg>';
+            btn.innerHTML = '<svg width="22" height="22" fill="none" viewBox="0 0 22 22"><rect x="5" y="5" width="12" height="12" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/><path d="M8 3h6a2 2 0 0 1 2 2v6" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/></svg> Copy Summary';
         }, 1200);
+        btn.focus(); // Accessibility: return focus
     };
 }
 // Animate summary content on update
@@ -239,7 +239,6 @@ function showResults(data) {
     }, 10);
 
     // Enable buttons
-    previewButton.disabled = false;
     generateQuizButton.disabled = false;
 
     // Setup copy button
@@ -288,7 +287,6 @@ function resetUI() {
     truncationNoticeElement.style.display = 'none';
     
     // Disable buttons
-    previewButton.disabled = true;
     generateQuizButton.disabled = true;
     
     // Reset quiz data
@@ -348,44 +346,62 @@ async function generateQuiz() {
     }
 }
 
-// Function to display the quiz on the page
+// Enhance quiz display with progress bar and modern cards
 function displayQuiz(quiz) {
-    console.log('Displaying quiz:', quiz);
     if (!quiz || !quiz.questions) {
-        console.error('Invalid quiz data:', quiz);
         showError('Failed to load quiz data.');
         return;
     }
-
     const questions = quiz.questions;
-    console.log('Quiz questions:', questions);
     quizQuestions.innerHTML = '';
 
+    // Add progress bar
+    let progressBar = document.createElement('div');
+    progressBar.className = 'quiz-progress-bar';
+    let progress = document.createElement('div');
+    progress.className = 'quiz-progress';
+    progress.style.width = '0%';
+    progressBar.appendChild(progress);
+    quizQuestions.appendChild(progressBar);
+
+    let selectedCount = 0;
+    function updateProgress() {
+        progress.style.width = ((selectedCount / questions.length) * 100) + '%';
+    }
+
     questions.forEach((question, index) => {
-        console.log(`Rendering question ${index + 1}:`, question);
         const questionDiv = document.createElement('div');
-        questionDiv.className = 'quiz-question';
+        questionDiv.className = 'quiz-question modern';
+
+        // Add question badge
+        const badge = document.createElement('span');
+        badge.className = 'question-badge';
+        badge.textContent = index + 1;
+        questionDiv.appendChild(badge);
 
         const questionText = document.createElement('div');
         questionText.className = 'question-text';
-        questionText.textContent = `${index + 1}. ${question.question}`;
+        questionText.textContent = question.question;
+        questionDiv.appendChild(questionText);
 
         const optionsDiv = document.createElement('div');
         optionsDiv.className = 'question-options';
 
         Object.keys(question.options).forEach(optionKey => {
             const optionDiv = document.createElement('div');
-            optionDiv.className = 'option-item';
+            optionDiv.className = 'option-item modern';
 
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.name = `question_${index}`;
             radio.value = optionKey;
             radio.id = `question_${index}_${optionKey}`;
+            radio.style.marginRight = '1em';
 
             const label = document.createElement('label');
             label.htmlFor = radio.id;
             label.textContent = `${optionKey}: ${question.options[optionKey]}`;
+            label.style.flex = '1';
 
             optionDiv.appendChild(radio);
             optionDiv.appendChild(label);
@@ -393,130 +409,74 @@ function displayQuiz(quiz) {
 
             // Add click handler for selecting the option
             optionDiv.addEventListener('click', () => {
+                if (!radio.checked) {
+                    selectedCount++;
+                    updateProgress();
+                }
                 document.querySelectorAll(`input[name='question_${index}']`).forEach(input => {
                     input.checked = false;
                 });
                 radio.checked = true;
-                document.querySelectorAll('.option-item').forEach(item => {
+                optionsDiv.querySelectorAll('.option-item').forEach(item => {
                     item.classList.remove('selected');
                 });
                 optionDiv.classList.add('selected');
             });
         });
 
-        questionDiv.appendChild(questionText);
         questionDiv.appendChild(optionsDiv);
         quizQuestions.appendChild(questionDiv);
     });
 }
 
-// Function to handle quiz submission
-async function submitQuiz(event) {
-    event.preventDefault();
-    console.log('Submitting quiz');
-
-    const userAnswers = {};
-    const inputs = document.querySelectorAll('input[type="radio"]:checked');
-    inputs.forEach(input => {
-        const name = input.name;
-        const value = input.value;
-        userAnswers[name] = value;
-        console.log(`Answer for ${name}: ${value}`);
-    });
-
-    console.log('User answers:', userAnswers);
-
-    try {
-        const response = await fetch('/api/quiz/evaluate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                quizData: currentQuizData,
-                userAnswers: userAnswers
-            })
-        });
-
-        const result = await response.json();
-        console.log('Quiz evaluation result:', result);
-
-        if (result.error) {
-            console.error('Quiz evaluation error:', result.error);
-            showError(result.error);
-            return;
-        }
-
-        displayQuizResults(result);
-    } catch (error) {
-        console.error('Error submitting quiz:', error);
-        showError('Error submitting quiz. Please try again.');
-    }
-}
-
-// Function to display quiz results
+// Enhance quiz results with summary card
 function displayQuizResults(result) {
-    console.log('Displaying quiz results:', result);
     const resultsContainer = document.getElementById('quizResults');
-    if (!resultsContainer) {
-        console.error('quizResults element not found!');
-        return;
-    }
+    if (!resultsContainer) return;
     resultsContainer.innerHTML = '';
 
+    // Summary card
+    const summaryCard = document.createElement('div');
+    summaryCard.className = 'quiz-summary-card';
+    summaryCard.innerHTML = `
+        <h2>Quiz Complete!</h2>
+        <p><strong>Score:</strong> ${result.correctAnswers} / ${result.totalQuestions} (${Math.round((result.correctAnswers/result.totalQuestions)*100)}%)</p>
+        <p>Great job! Review your answers below.</p>
+    `;
+    resultsContainer.appendChild(summaryCard);
+
     // Highlight answers in the quiz UI
-    // For each question, find the options and apply classes
     result.questionResults.forEach((res, index) => {
-        // Find the question container
-        const questionDiv = document.querySelectorAll('.quiz-question')[index];
-        if (questionDiv) {
-            const optionDivs = questionDiv.querySelectorAll('.option-item');
-            optionDivs.forEach(optionDiv => {
-                const radio = optionDiv.querySelector('input[type="radio"]');
-                if (!radio) return;
-                const optionValue = radio.value;
-                // Remove previous highlight classes
-                optionDiv.classList.remove('correct-answer', 'wrong-answer', 'selected');
-                // Highlight user's answer
-                if (optionValue === res.userAnswer) {
-                    if (res.isCorrect) {
-                        optionDiv.classList.add('correct-answer');
-                    } else {
-                        optionDiv.classList.add('wrong-answer');
-                    }
-                }
-                // Highlight the correct answer if user was wrong
-                if (!res.isCorrect && optionValue === res.correctAnswer) {
-                    optionDiv.classList.add('correct-answer');
-                }
-            });
-        }
-
-        // Render result summary as before
         const resultDiv = document.createElement('div');
-        resultDiv.className = `result-item ${res.isCorrect ? 'correct' : 'incorrect'}`;
-
+        resultDiv.className = `quiz-question modern`;
+        // Add question badge
+        const badge = document.createElement('span');
+        badge.className = 'question-badge';
+        badge.textContent = index + 1;
+        resultDiv.appendChild(badge);
+        // Question text
         const questionLabel = document.createElement('div');
-        questionLabel.className = 'result-question';
-        questionLabel.textContent = `Question ${index + 1}: ${res.question}`;
-
-        const answerLabel = document.createElement('div');
-        answerLabel.className = 'result-answer';
-        answerLabel.textContent = `Your answer: ${res.userAnswer} (Correct: ${res.correctAnswer})`;
-
+        questionLabel.className = 'question-text';
+        questionLabel.textContent = res.question;
         resultDiv.appendChild(questionLabel);
-        resultDiv.appendChild(answerLabel);
+        // Options
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'question-options';
+        Object.entries(res.options).forEach(([key, value]) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option-item modern';
+            if (key === res.userAnswer) {
+                optionDiv.classList.add(res.isCorrect ? 'correct' : 'incorrect');
+            }
+            if (key === res.correctAnswer) {
+                optionDiv.classList.add('correct');
+            }
+            optionDiv.innerHTML = `<span style='font-weight:600;margin-right:0.7em;'>${key}</span> ${value}`;
+            optionsDiv.appendChild(optionDiv);
+        });
+        resultDiv.appendChild(optionsDiv);
         resultsContainer.appendChild(resultDiv);
     });
-
-    // Hide old scoreDisplay span if present
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    if (scoreDisplay) {
-        scoreDisplay.style.display = 'none';
-    }
-
-    // Show the new score modal with animated stats
-    showScoreModal(result);
 }
 
 function showScoreModal(result) {
@@ -533,7 +493,23 @@ function showScoreModal(result) {
     document.getElementById('scoreModalCorrect').textContent = correct;
     document.getElementById('scoreModalWrong').textContent = wrong;
     document.getElementById('scoreModalTotal').textContent = total;
-    document.getElementById('scoreModalPercentage').textContent = percent + '%';
+    const percentLabel = document.getElementById('scoreModalPercentage');
+    percentLabel.textContent = percent + '%';
+
+    // Color the score percentage label
+    if (percent === 100) {
+      percentLabel.style.color = '#f59e0b'; // gold
+      percentLabel.style.textShadow = '0 2px 8px #fbbf2422';
+    } else if (percent >= 80) {
+      percentLabel.style.color = '#10b981'; // green
+      percentLabel.style.textShadow = '0 2px 8px #10b98122';
+    } else if (percent < 50) {
+      percentLabel.style.color = '#ef4444'; // red
+      percentLabel.style.textShadow = '0 2px 8px #ef444422';
+    } else {
+      percentLabel.style.color = '#7c3aed'; // accent
+      percentLabel.style.textShadow = '0 2px 8px #a78bfa22';
+    }
 
     // Animate the circular progress
     const circle = document.querySelector('.score-ring-fg');
@@ -545,6 +521,14 @@ function showScoreModal(result) {
         const offset = circumference - (percent / 100) * circumference;
         circle.style.strokeDashoffset = offset;
     }, 100);
+
+    // Confetti for high scores
+    const modalContent = modal.querySelector('.score-modal-content');
+    if (percent >= 80) {
+      modalContent.classList.add('confetti');
+    } else {
+      modalContent.classList.remove('confetti');
+    }
 
     // Modal close handler
     const closeBtn = document.getElementById('scoreModalClose');
@@ -583,29 +567,6 @@ function generateNewQuiz() {
     }
 }
 
-function openPdfPreview() {
-    if (!currentPdfFile) {
-        showError('No PDF file available for preview');
-        return;
-    }
-
-    const fileURL = URL.createObjectURL(currentPdfFile);
-    document.getElementById('pdfPreview').src = fileURL;
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
-}
-
-function closePdfPreview() {
-    modal.style.display = 'none';
-    document.getElementById('pdfPreview').src = '';
-    document.body.style.overflow = ''; // Restore scrolling
-    
-    // Clean up object URL
-    if (currentPdfFile) {
-        URL.revokeObjectURL(document.getElementById('pdfPreview').src);
-    }
-}
-
 function resetForm() {
     currentPdfFile = null;
     currentPdfContent = null;
@@ -617,4 +578,46 @@ function resetForm() {
         top: 0,
         behavior: 'smooth'
     });
+} 
+
+// Implement submitQuiz to handle quiz submission and display score stats
+function submitQuiz(event) {
+  event.preventDefault();
+  if (!currentQuizData || !currentQuizData.quiz) {
+    showError('No quiz data available.');
+    return;
+  }
+
+  // Collect user answers
+  const userAnswers = [];
+  currentQuizData.quiz.questions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="question_${i}"]:checked`);
+    userAnswers.push(selected ? selected.value : null);
+  });
+
+  // Simple frontend scoring
+  const questionResults = currentQuizData.quiz.questions.map((q, i) => {
+    const userAnswer = userAnswers[i];
+    const correctAnswer = q.correctAnswer;
+    return {
+      question: q.question,
+      options: q.options,
+      userAnswer,
+      correctAnswer,
+      isCorrect: userAnswer === correctAnswer
+    };
+  });
+  const correctAnswers = questionResults.filter(q => q.isCorrect).length;
+  const totalQuestions = questionResults.length;
+
+  const result = {
+    correctAnswers,
+    totalQuestions,
+    questionResults
+  };
+
+  quizContent.style.display = 'none';
+  quizResults.style.display = 'block';
+  displayQuizResults(result);
+  showScoreModal(result);
 } 

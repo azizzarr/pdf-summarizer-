@@ -1,7 +1,15 @@
 <!-- Sidebar Component -->
-<aside class="sidebar">
+<aside class="sidebar glassy-sidebar">
     <div class="sidebar-header">
-        <h3>PDF Analyzer Pro</h3>
+        <div class="sidebar-logo">
+            <img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f4c4.svg" alt="PDF Logo" class="logo-img" />
+            <span class="sidebar-title">PDF Analyzer Pro</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation">
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
     </div>
     <nav class="sidebar-nav">
         <ul>
@@ -40,100 +48,4 @@
             <span>Help & Support</span>
         </a>
     </div>
-</aside>
-
-<style>
-    .sidebar {
-        width: 260px;
-        height: 100vh;
-        background: white;
-        border-right: 1px solid var(--border-color);
-        position: fixed;
-        left: 0;
-        top: 0;
-        display: flex;
-        flex-direction: column;
-        padding: 1.5rem 0;
-    }
-
-    .sidebar-header {
-        padding: 0 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .sidebar-header h3 {
-        color: var(--text-color);
-        font-size: 1.25rem;
-        font-weight: 600;
-    }
-
-    .sidebar-nav {
-        flex: 1;
-    }
-
-    .sidebar-nav ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    .sidebar-nav li {
-        margin-bottom: 0.5rem;
-    }
-
-    .sidebar-nav a {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1.5rem;
-        color: var(--text-color);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        border-radius: 0.5rem;
-        margin: 0 0.5rem;
-    }
-
-    .sidebar-nav a:hover {
-        background-color: var(--background-color);
-        color: var(--primary-color);
-    }
-
-    .sidebar-nav li.active a {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    .nav-icon {
-        width: 20px;
-        height: 20px;
-        margin-right: 0.75rem;
-    }
-
-    .sidebar-footer {
-        padding: 1.5rem;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .help-link {
-        display: flex;
-        align-items: center;
-        color: #6b7280;
-        text-decoration: none;
-        font-size: 0.875rem;
-        transition: color 0.2s ease;
-    }
-
-    .help-link:hover {
-        color: var(--primary-color);
-    }
-
-    @media (max-width: 768px) {
-        .sidebar {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-        }
-
-        .sidebar.show {
-            transform: translateX(0);
-        }
-    }
-</style> 
+</aside> 
